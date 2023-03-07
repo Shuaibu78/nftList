@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { CardGrid, Card, ModalWrapper, Modal, Button } from "./style";
+import { Center, ModalWrapper, Modal, Button } from "./style";
+import NftCard from "../components/nftCard/nftCard";
+import ClipLoader from "react-spinners/ClipLoader";
+import NftModal from "../components/nftModal/nftModal";
 
 const NFTList = ({ address }) => {
   const [nfts, setNfts] = useState([]);
   const [selectedNFT, setSelectedNFT] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     fetch(`https://api.opensea.io/api/v1/assets?owner=${address}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
+        setLoading(false);
         setNfts(data.assets);
       })
-      .catch((error) => console.error(error));
-  }, []);
+      .catch((error) => {
+        setLoading(false);
+        console.error(error);
+      });
+  }, [address]);
 
   const handleCardClick = (nft) => {
     setSelectedNFT(nft);
@@ -28,31 +36,31 @@ const NFTList = ({ address }) => {
   };
 
   return (
-    <>
-      <CardGrid>
-        {/* filter out those without image */}
-        {nfts
-          .filter((nft) => nft.image_thumbnail_url !== null)
-          .map((nft) => (
-            <Card key={nft.token_id} onClick={() => handleCardClick(nft)}>
-              <img src={nft.image_thumbnail_url} alt={nft.name} />
-              <h3>{nft.collection.name}</h3>
-            </Card>
-          ))}
-      </CardGrid>
-
-      {selectedNFT && (
-        <ModalWrapper onClick={handleModalClose}>
-          <Modal onClick={(e) => e.stopPropagation()}>
-            <h2>{selectedNFT.name}</h2>
-            <img src={selectedNFT.image_url} alt={selectedNFT.name} />
-            <p>Description: {selectedNFT.description}</p>
-            <p>Owner's address: {selectedNFT?.asset_contract?.address}</p>
-            <Button onClick={handlePurchaseClick}>Purchase on OpenSea</Button>
-          </Modal>
-        </ModalWrapper>
+    <div>
+      <Center loading={loading}>
+        <ClipLoader
+          color="blue"
+          loading={loading}
+          size={150}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
+      </Center>
+      {nfts.length > 0 ? (
+        <NftCard nfts={nfts} handleCardClick={handleCardClick} />
+      ) : (
+        <Center loading={true}>
+          No result found. please check your network
+        </Center>
       )}
-    </>
+      {selectedNFT && (
+        <NftModal
+          selectedNFT={selectedNFT}
+          handleModalClose={handleModalClose}
+          handlePurchaseClick={handlePurchaseClick}
+        />
+      )}
+    </div>
   );
 };
 
