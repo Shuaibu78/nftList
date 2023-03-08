@@ -44,6 +44,7 @@ export const Button = styled.a`
   border-radius: 5px;
   text-decoration: none;
   text-align: center;
+  cursor: pointer;
 
   @media (max-width: 768px) {
     width: 100%;
